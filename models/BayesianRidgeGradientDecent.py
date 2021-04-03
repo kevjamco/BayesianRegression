@@ -76,13 +76,7 @@ class Bayesian():
         m = X.shape[0]
         y_pred = X.dot(w)
         sig = np.log(1 + np.exp(rho))
-        q_w_th = normal_pdf(w, mu, sig)
-        P_w = normal_pdf(w, self.prior_mu, self.prior_sig)
-        P_D = normal_pdf(np.expand_dims(y, axis=1), y_pred, 1/np.sqrt(2*np.pi))
         lnP_Dw = ln_pdf_dx(y_pred, np.expand_dims(y, axis=1), 1/np.sqrt(2*np.pi))
-        # dfdw = 1 / q_w_th * pdf_dx(w, mu, sig)    -1/P_w *  pdf_dx(w, self.prior_mu, self.prior_sig)  -1/ np.product(P_D) * np.dot(X.T, P_Dw)
-        # dfdm = 1 / q_w_th * pdf_dmu(w, mu, sig)   -1/P_w *  pdf_dmu(w, self.prior_mu, self.prior_sig)
-        # dfdr = 1 / q_w_th * pdf_dsig(w, mu, sig)  -1/P_w *  pdf_dsig(w, self.prior_mu, self.prior_sig)
         dfdw = ln_pdf_dx(w, mu, sig) - ln_pdf_dx(w, self.prior_mu, self.prior_sig) - 1/m*np.dot(X.T, lnP_Dw)
         dfdm = ln_pdf_dmu(w, mu, sig) - ln_pdf_dmu(w, self.prior_mu, self.prior_sig)
         dfdr = ln_pdf_dsig(w, mu, sig) - ln_pdf_dsig(w, self.prior_mu, self.prior_sig)
