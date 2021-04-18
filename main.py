@@ -27,7 +27,7 @@ y = p(X) + np.random.randn(100, 1) * eps1 + ((1/3 < X) & (X < 2/3)) * np.random.
 
 # pyRidge code
 # rig = Ridge(num_iters=10000, alpha=0.01, beta=0.5, deg=6, normalization=False)
-rig = Bayesian(num_iters=10000, alpha=0.01, beta=0.5, deg=6, normalization=False)
+rig = Bayesian(num_iters=10000, alpha=0.04, beta=0.5, deg=6, normalization=False)
 
 rig.fit(X, y[:,0])
 if hasattr(rig, 'mu'):
@@ -39,9 +39,12 @@ if hasattr(rig, 'rho'):
 X_new = np.expand_dims(np.linspace(0,2), axis=1)
 samples = 100
 y_predict = np.zeros([samples, np.size(X_new)])
+y_predict_fixed = np.zeros(np.size(X_new))
 for sample in range(samples):
     pred = rig.predict(X_new, fixed=False)
     y_predict[sample,:] = pred[:,0]
+
+y_predict_fixed = rig.predict(X_new, fixed=True)
 
 confidence_interval = 80
 lower_p = (100 - confidence_interval) / 2
@@ -57,7 +60,7 @@ epistemic = np.diag(np.dot((y_predict - sample_mean).T,(y_predict - sample_mean)
 # aleatoric = np.sum(y_predict - np.diag(np.dot(y_predict.T,y_predict)), axis=0 ) / samples
 
 sig = np.log(1 + np.exp(rig.rho))
-aleatoric_scalar = np.sum(np.square(sig))
+aleatoric_scalar = np.mean(np.square(sig))
 print(f'Aleatoric uncertainty scalar: {aleatoric_scalar}')
 
 plt.plot(rig.J_all)
@@ -65,9 +68,12 @@ plt.show()
 
 plt.figure()
 # plt.plot(X_new, y_predict, "r-")
-plt.fill_between(X_new[:,0], lower, upper, facecolor='red', interpolate=True)
+# PLOT CI
+##plt.fill_between(X_new[:,0], lower, upper, facecolor='red', interpolate=True)
+# PLOT Prediction
+plt.plot(X_new, y_predict_fixed, "r-")
 # plt.plot(X_orig, y_orig, "g-")
-# plt.plot(X_new[:,0], epistemic, "b-")
+plt.plot(X_new[:,0], epistemic, "b-")
 plt.plot(X_new, p(X_new), "g-")
 plt.plot(X, y, "b.")
 plt.show()

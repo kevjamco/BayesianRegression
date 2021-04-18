@@ -17,6 +17,10 @@ class Bayesian():
     """
 
     def __init__(self, num_iters=2000, alpha=0.1, beta=0.1, deg=2, normalization=False):
+        """
+        alpha: train speed
+        beta: regularization constant
+        """
         self.num_iters = num_iters
         self.alpha = alpha
         self.beta = beta
@@ -24,7 +28,7 @@ class Bayesian():
         self.normalization = normalization
 
         self.prior_mu = 0
-        self.prior_sig = 1
+        self.prior_sig = 4
         self.init_post_mu = 0.1
         self.init_post_rho = 0.1
 
@@ -72,14 +76,24 @@ class Bayesian():
         return KL
 
     def _compute_gradient(self, X, y, mu, rho, eps, w, beta):
+        """
+        X: data
+        y: target
+        m, rho: weight parameters (before update)
+        eps: sampled noise
+        w: sampled weights
+        beta: regularization term
+        """
         # f(w, θ) = log q(w|θ) − log P(w)P(D|w).
         m = X.shape[0]
         y_pred = X.dot(w)
         sig = np.log(1 + np.exp(rho))
-        lnP_Dw = ln_pdf_dx(y_pred, np.expand_dims(y, axis=1), 1/np.sqrt(2*np.pi))
+        # gamma: regularization for loss
+        gamma = 1 / np.sqrt(2 * np.pi)
+        lnP_Dw = ln_pdf_dx(y_pred, np.expand_dims(y, axis=1), gamma)
         dfdw = ln_pdf_dx(w, mu, sig) - ln_pdf_dx(w, self.prior_mu, self.prior_sig) - 1/m*np.dot(X.T, lnP_Dw)
-        dfdm = ln_pdf_dmu(w, mu, sig) - ln_pdf_dmu(w, self.prior_mu, self.prior_sig)
-        dfdr = ln_pdf_dsig(w, mu, sig) - ln_pdf_dsig(w, self.prior_mu, self.prior_sig)
+        dfdm = ln_pdf_dmu(w, mu, sig) # - ln_pdf_dmu(w, self.prior_mu, self.prior_sig)
+        dfdr = ln_pdf_dsig(w, mu, sig) # - ln_pdf_dsig(w, self.prior_mu, self.prior_sig)
 
         del_mu = dfdw + dfdm
         del_sig = dfdw * (eps / 1 + np.exp(-rho)) + dfdr
@@ -100,6 +114,13 @@ class Bayesian():
     def _gradient_descent(self, X, y, mu, rho, num_iterations, alpha, beta):
         """Performs Gradient Descent.
         The threshold is set by num_iters, instead of some value in this implementation
+        X: data
+        y: target
+        mu: weight parameter
+        rho: weight parameter
+        num_iterations
+        alpha: training speed
+        beta: regularization constant
         """
         m = X.shape[0]
         # Keep a history of Costs (for visualisation)
