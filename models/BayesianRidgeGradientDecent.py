@@ -90,7 +90,7 @@ class Bayesian():
         sig = np.log(1 + np.exp(rho))
         # gamma: regularization for loss
         gamma = 1 / np.sqrt(2 * np.pi)
-        lnP_Dw = ln_pdf_dx(y_pred, np.expand_dims(y, axis=1), gamma)
+        lnP_Dw = ln_pdf_dmu(np.expand_dims(y, axis=1), y_pred, gamma)
         dfdw = ln_pdf_dx(w, mu, sig) - ln_pdf_dx(w, self.prior_mu, self.prior_sig) - 1/m*np.dot(X.T, lnP_Dw)
         dfdm = ln_pdf_dmu(w, mu, sig) # - ln_pdf_dmu(w, self.prior_mu, self.prior_sig)
         dfdr = ln_pdf_dsig(w, mu, sig) # - ln_pdf_dsig(w, self.prior_mu, self.prior_sig)
